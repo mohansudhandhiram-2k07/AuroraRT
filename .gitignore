@@ -1,0 +1,10 @@
+# Build artifacts
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+
+# OS generated files
+.DS_Store
+Thumbs.db
