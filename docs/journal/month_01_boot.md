@@ -34,3 +34,27 @@ I compiled the OS using `arm-none-eabi-gcc`.
 * **Success:** Used `arm-none-eabi-objdump -h` to verify the `.elf` binary. `.text` was perfectly mapped to `0x08000000`, and `.data` was mapped to run in RAM but load from Flash. 
 
 Layer 1 complete. Next up: The Build System (Makefile).
+
+## 5. Automating the Build (Makefile)
+Typing the raw GCC command was getting tedious, so I wrote a professional Makefile to automate the toolchain.
+* **Architecture:** Structured the Makefile into Toolchain, Files, Flags, and Rules. Configured it so that all intermediate object files (`.o`) and final binaries (`.elf`, `.bin`, `.map`) output into a clean `build/` directory.
+* **Version Control:** Updated `.gitignore` to completely ignore the `build/` folder and dependency tracking files. 
+
+## 6. First Bare-Metal Driver (GPIO Blink)
+The final step for Layer 1 was proving the CPU could actually manipulate hardware. No HAL, just raw pointers to memory-mapped registers. 
+
+### The Datasheet Catch (F1 vs F4)
+While looking up the memory map in the ST Reference Manual to find the RCC (Reset and Clock Control) and GPIO base addresses, I noticed a discrepancy. The addresses I was expecting for the Cortex-M4 (STM32F4) didn't match the datasheet I was reading. 
+* I noticed `0x4002 0000` mapped to DMA1 in my PDF, not GPIOA! 
+* **Realization:** I was looking at the STM32F1 (Cortex-M3) Reference Manual. Rather than panicking, I used this as an exercise in hardware abstraction. I decided to pivot and write the code for the F1 silicon using its specific offsets (RCC at `0x40021000`, GPIOA at `0x40010800`). Since I'm using `#define` macros, adapting this to an F4 board later will only require changing a few hex numbers at the top of the file.
+
+### Bitwise Operations
+Hardware registers are 32 bits wide, so I couldn't just assign values directly without overwriting other hardware configurations. I used strict read-modify-write bitwise logic:
+* **Enable Clock:** Used `|= (1 << 2)` to set Bit 2 in `RCC_APB2ENR`.
+* **Set Pin Mode:** Needed to write the binary pattern `0010` to bits 20-23 in `GPIOA_CRL`. First, I cleared the bits using a mask: `&= ~(0xF << 20)`. Then, instead of shifting `2 << 20`, I realized I could elegantly shift `1 << 21` to place the bit in the exact correct slot.
+* **Toggle LED:** Used `^= (1 << 5)` on `GPIOA_ODR` in the infinite loop.
+
+### Bugs
+* **The Delay Loop Trap:** I wrote a dumb delay loop to slow down the 16MHz processor: `for(volatile int i = 1000000; i < 0; i--);`. The LED wouldn't blink—it just stayed on. I realized my condition `i < 0` evaluated to false immediately since `i` starts at 1,000,000. Changed it to `i > 0`.
+
+**Month 1 is officially complete.** The foundation is rock solid.
