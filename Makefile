@@ -9,12 +9,13 @@ BUILD_DIR = build
 
 SRCS = \
 startup/startup.c \
-applications/blink/main.c
+applications/blink/main.c \
+drivers/src/uart.c
 
 LDSCRIPT = linker/linker.ld		
 
 
-CFLAGS = $(MCU) -nostdlib -O0 -Wall -Wextra -g3
+CFLAGS = $(MCU) -nostdlib -O0 -Wall -Wextra -g3 -I drivers/inc
 LDFLAGS = $(MCU) -nostdlib -T $(LDSCRIPT) -Wl,-Map=$(BUILD_DIR)/AuroraRT.map
 
 TARGET = $(BUILD_DIR)/AuroraRT
@@ -32,7 +33,7 @@ $(TARGET).elf: $(OBJS)
 $(TARGET).bin: $(TARGET).elf
 	$(OBJCOPY) -O binary $< $@
 
-VPATH = startup:applications/blink
+VPATH = startup:applications/blink :drivers/src
 $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 

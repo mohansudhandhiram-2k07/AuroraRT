@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "uart.h"
 
 // Base Addresses (STM32F1)
 #define RCC_BASE      0x40021000   
