@@ -31,3 +31,10 @@ Writing the driver exposed a few blind spots in my C mechanics:
 * **Makefile VPATH:** After adding `uart.c` to the source list, `make` couldn't find it. I learned about `VPATH`, the search path for the Make tool. Appending `:drivers/src` to the `VPATH` variable allowed the build system to automatically locate and compile the new driver.
 
 The driver compiles cleanly. Next step: Writing a custom `printf` function to actually use this UART link.
+
+## 6. Custom Libc: Bare-Metal printf
+To make the UART usable without pulling in standard libraries, I implemented a custom `uart_printf()` using `<stdarg.h>`.
+* **Variadic Functions:** Utilized `va_list`, `va_start`, and `va_arg` to process variable arguments sequentially from the stack.
+* **Format Parsing:** Implemented a parsing loop that triggers on `%`. A `switch(*format)` handles specific formatters (`%s` for strings, `%d` for integers, `%c` for characters).
+* **Stack Corruption Prevention:** Identified a bug where unhandled format specifiers (or `%%`) falling into a `default` case that calls `va_arg` would pop an unintended variable off the stack. Explicitly mapped `case '%'` and neutralized the `default` fallback to prevent memory misalignment.
+* **Binary Footprint:** The compiled binary measures exactly **736 bytes**. Relying on `<stdio.h>` and `newlib-nano` would have forced a 15,000+ byte overhead. Building from the reset vector upward yields absolute control over memory.
