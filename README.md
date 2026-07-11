@@ -1,7 +1,7 @@
 # AuroraRT
 
 **Status: ACTIVE — Month 02 of 12**  
-**Target:** STM32F1 (Cortex-M3) / Porting to Cortex-M4 later  
+**Target:** STM32F446 (Cortex-M4) / Porting to Cortex-M4 later  
 **Architecture:** Bare-metal, pure C, custom build system  
 
 AuroraRT is a personal engineering project to build a Real-Time Operating System entirely from scratch. 
